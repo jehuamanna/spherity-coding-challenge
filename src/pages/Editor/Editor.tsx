@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   Text,
   Platform,
@@ -14,8 +14,11 @@ import {
   RichEditor,
   RichToolbar,
 } from "react-native-pell-rich-editor";
-import { capitalize } from "../common/utils/capitalize";
-import Redirector, { useComponentDataReceive } from "../common/lib/Redirector";
+import { capitalize } from "../../common/utils/capitalize";
+import Redirector, {
+  useComponentDataReceive,
+} from "../../common/lib/Redirector";
+import { colorTheme, ThemeContext } from "../../common/context/ThemeContext";
 
 const Editor = (props) => {
   const { route, navigation } = props;
@@ -23,7 +26,7 @@ const Editor = (props) => {
   const { id, ...rest } = route?.params?.props;
   const { posts } = useComponentDataReceive("posts") || {};
   const item = posts?.find((post) => post.id === id);
-
+  const { theme, setTheme } = useContext(ThemeContext);
   const { editedPost, setEditedPost } =
     useComponentDataReceive("editedPost") || {};
 
@@ -36,7 +39,7 @@ const Editor = (props) => {
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
-        navigation.navigate("Posts", { props: { item } });
+        navigation.navigate("Posts", { props: { item }, theme });
         return true;
       };
 
@@ -53,10 +56,14 @@ const Editor = (props) => {
       {editedPost && editedPost.body && (
         <SafeAreaView>
           <ScrollView>
-            <Text style={styles.description}> Edit Title:</Text>
+            <Text style={styles(theme).description}> Edit Title:</Text>
             <RichEditor
               style={{
                 height: 10,
+              }}
+              editorStyle={{
+                color: colorTheme[theme].secondary,
+                backgroundColor: colorTheme[theme].primary,
               }}
               initialHeight={100}
               ref={richText}
@@ -69,11 +76,15 @@ const Editor = (props) => {
                 navigation.setOptions({ editedPost });
               }}
             />
-            <Text style={styles.description}> Edit Body:</Text>
+            <Text style={styles(theme).description}> Edit Body:</Text>
 
             <RichEditor
               style={{
                 height: 100,
+              }}
+              editorStyle={{
+                color: colorTheme[theme].secondary,
+                backgroundColor: colorTheme[theme].primary,
               }}
               initialHeight={500}
               ref={richText}
@@ -93,19 +104,21 @@ const Editor = (props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  description: {
-    fontStyle: "normal",
-    fontWeight: "600",
-    fontSize: 16,
-    lineHeight: 19,
-    color: "#000101",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    textAlign: "left",
-    flex: 1,
-    flexWrap: "wrap",
-  },
-});
+const styles = (theme) =>
+  StyleSheet.create({
+    description: {
+      fontStyle: "normal",
+      fontWeight: "600",
+      fontSize: 16,
+      lineHeight: 19,
+      color: colorTheme[theme].secondary,
+      backgroundColor: colorTheme[theme].primary,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      textAlign: "left",
+      flex: 1,
+      flexWrap: "wrap",
+    },
+  });
 
 export default Editor;

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Text, SafeAreaView, TextInput, View } from "react-native";
 import BouncyCheckbox from "react-native-bouncy-checkbox";
 import RadioGroup from "react-native-radio-buttons-group";
+import { colorTheme, ThemeContext } from "../../common/context/ThemeContext";
 
 export default function Filter({
   filterByUserId,
@@ -11,33 +12,37 @@ export default function Filter({
   setFilterByTitle,
   filterByBody,
   setFilterByBody,
-  setSearchOptions,
+  setParams,
 }) {
-  const [radioButtons, setRadioButtons] = useState([
+  const { theme, setTheme } = React.useContext(ThemeContext);
+  const radioButtonsData = [
     {
       id: "1", // acts as primary key, should be unique and non-empty string
-      label: "Exact",
-      value: "weights",
-      selected: true,
-      searchValue: 1,
+      label: "Light",
+      selected: theme === "light",
+      value: "light",
     },
     {
       id: "2",
-      label: "Fuzzy",
-      value: "fuzzy",
-      searchValue: false,
+      label: "Dark",
+      selected: theme === "dark",
+      value: "dark",
     },
-  ]);
+  ];
+  const [radioButtons, setRadioButtons] = useState(radioButtonsData);
 
   function onPressRadioButton(radioButtonsArray) {
+    console.log(radioButtonsArray[0].selected);
+    if (radioButtonsArray[0].selected) {
+      setTheme("light");
+      setParams({ theme: "light" });
+    } else {
+      setTheme("dark");
+      setParams({ theme: "dark" });
+    }
     setRadioButtons(radioButtonsArray);
-    const searchOptions =
-      radioButtonsArray.find((i) => i.selected === true).value === "fuzzy"
-        ? { fuzzy: 1, prefix: true }
-        : {};
-    console.log(searchOptions);
-    setSearchOptions(searchOptions);
   }
+
   return (
     <>
       <View
@@ -48,14 +53,15 @@ export default function Filter({
           flex: 1,
           flexDirection: "column",
           alignItems: "flex-start",
+          backgroundColor: colorTheme[theme].primary,
         }}
       >
         <Text
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: colorTheme[theme].primary,
             fontWeight: "bold",
             fontSize: 18,
-            color: "#000101",
+            color: colorTheme[theme].secondary,
             marginHorizontal: 10,
           }}
         >
@@ -63,11 +69,15 @@ export default function Filter({
         </Text>
         <BouncyCheckbox
           size={25}
-          fillColor="#000101"
+          fillColor={
+            theme !== "light"
+              ? colorTheme[theme].primary
+              : colorTheme[theme].secondary
+          }
           unfillColor="#FFFFFF"
           text="User ID"
           isChecked={filterByUserId}
-          iconStyle={{ borderColor: "#000101" }}
+          iconStyle={{ borderColor: colorTheme[theme].secondary }}
           innerIconStyle={{ borderWidth: 2 }}
           onPress={(isChecked: boolean) => setFilterByUserId(isChecked)}
           textStyle={{
@@ -77,11 +87,15 @@ export default function Filter({
         />
         <BouncyCheckbox
           size={25}
-          fillColor="#000101"
+          fillColor={
+            theme !== "light"
+              ? colorTheme[theme].primary
+              : colorTheme[theme].secondary
+          }
           unfillColor="#FFFFFF"
           text="Title"
           isChecked={filterByTitle}
-          iconStyle={{ borderColor: "#000101" }}
+          iconStyle={{ borderColor: colorTheme[theme].secondary }}
           innerIconStyle={{ borderWidth: 2 }}
           onPress={(isChecked: boolean) => setFilterByTitle(isChecked)}
           textStyle={{
@@ -91,11 +105,15 @@ export default function Filter({
         />
         <BouncyCheckbox
           size={25}
-          fillColor="#000101"
+          fillColor={
+            theme !== "light"
+              ? colorTheme[theme].primary
+              : colorTheme[theme].secondary
+          }
           unfillColor="#FFFFFF"
           text="Body"
           isChecked={filterByBody}
-          iconStyle={{ borderColor: "#000101" }}
+          iconStyle={{ borderColor: colorTheme[theme].secondary }}
           innerIconStyle={{ borderWidth: 2 }}
           onPress={(isChecked: boolean) => setFilterByBody(isChecked)}
           textStyle={{
@@ -106,30 +124,10 @@ export default function Filter({
       </View>
       <View
         style={{
-          paddingVertical: 10,
-          justifyContent: "flex-start",
-          alignContent: "flex-start",
-          flex: 1,
-          flexDirection: "column",
-          alignItems: "flex-start",
+          backgroundColor: colorTheme[theme].primary,
         }}
       >
-        <Text
-          style={{
-            backgroundColor: "#fff",
-            fontWeight: "bold",
-            fontSize: 18,
-            color: "#000101",
-            marginHorizontal: 10,
-          }}
-        >
-          Search Options:
-        </Text>
-        <RadioGroup
-          layout="row"
-          radioButtons={radioButtons}
-          onPress={onPressRadioButton}
-        />
+        <RadioGroup radioButtons={radioButtons} onPress={onPressRadioButton} />
       </View>
     </>
   );

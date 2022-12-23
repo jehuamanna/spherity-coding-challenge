@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "Spherity-Code-Challenge",
+    "slug": "Spherity-Code-Challenge",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -19,14 +19,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jehuamanna.myapp"
+      "bundleIdentifier": "com.jehuamanna.SpherityCodeChallenge"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.jehuamanna.myapp"
+      "package": "com.jehuamanna.SpherityCodeChallenge"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -35,6 +35,8 @@
       "eas": {
         "projectId": "f83f936c-7099-4042-ab9f-b30c2477f083"
       }
-    }
+    },
+  "privacy": "public"
+
   }
 }

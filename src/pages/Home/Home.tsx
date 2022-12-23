@@ -13,14 +13,14 @@ const JsonSearch = require("search-array").default;
 import MiniSearch from "minisearch";
 
 import { useNetInfo } from "@react-native-community/netinfo";
-import React, { useRef, useState } from "react";
-import ContentModal, { Tiles } from "../Modal";
+import React, { useContext, useRef, useState } from "react";
+import ContentModal, { Tiles } from "../Modal/Modal";
 import Redirector, { useComponentDataSend } from "../../common/lib/Redirector";
 import Search from "./Search";
 import Posts from "./Posts";
-import { throttle } from "../../common/utils/throttle";
 import Filter from "../Filter/Filter";
 import itemsjs from "itemsjs";
+import { colorTheme, ThemeContext } from "../../common/context/ThemeContext";
 export default function Home(props) {
   const netInfo = useNetInfo();
   const [editedPost, setEditedPost] = useState({
@@ -38,7 +38,6 @@ export default function Home(props) {
   const [filterByUserId, setFilterByUserId] = useState(true);
   const [filterByTitle, setFilterByTitle] = useState(false);
   const [filterByBody, setFilterByBody] = useState(false);
-  const [searchOptions, setSearchOptions] = useState({});
   useComponentDataSend("posts", { posts, setPosts });
   useComponentDataSend("editedPost", { editedPost, setEditedPost });
   const makeAPICall = () => {
@@ -88,44 +87,60 @@ export default function Home(props) {
           { filter: "body", isChecked: filterByBody },
           { filter: "title", isChecked: filterByTitle },
         ];
-        // const items = itemsjs(posts, {
-        //   searchableFields: filters
-        //     .filter((i) => i.isChecked)
-        //     .map((i) => i.filter),
-        // });
-        console.log(filters.filter((i) => i.isChecked).map((i) => i.filter));
         const miniSearch = new MiniSearch({
           fields: filters.filter((i) => i.isChecked).map((i) => i.filter),
           storeFields: filters.map((i) => i.filter).concat(["id"]),
           searchOptions: {
-            ...searchOptions,
+            fuzzy: true,
             processTerm: (term) => String(term).toLowerCase(), // search query processing
           }, // fields to index for full-text search
           processTerm: (term) => String(term).toLowerCase(),
         });
 
         miniSearch.addAll(posts);
-
-        // const filteredPosts = posts.filter((post) => {
-        //   return (
-        //     post.body.toLowerCase().includes(searchText.toLowerCase()) ||
-        //     post.title.toLowerCase().includes(searchText.toLowerCase())
-        //   );
-        // });
-        console.log("eee", searchOptions);
         return miniSearch.search(searchText.toLowerCase());
       });
     }
   };
   React.useEffect(() => {
     onChangeText(searchText);
-  }, [searchText, filterByBody, filterByTitle, filterByUserId]);
+  }, [searchText]);
+  React.useEffect(() => {
+    if (!searchText) {
+      setFilteredPosts(posts);
+      return;
+    }
+    setFilteredPosts(() => {
+      const filters = [
+        { filter: "userId", isChecked: filterByUserId },
+        { filter: "body", isChecked: filterByBody },
+        { filter: "title", isChecked: filterByTitle },
+      ];
+      const miniSearch = new MiniSearch({
+        fields: filters.filter((i) => i.isChecked).map((i) => i.filter),
+        storeFields: filters.map((i) => i.filter).concat(["id"]),
+        searchOptions: {
+          fuzzy: 1,
+          processTerm: (term) => String(term).toLowerCase(), // search query processing
+        }, // fields to index for full-text search
+        processTerm: (term) => String(term).toLowerCase(),
+      });
+
+      miniSearch.addAll(posts);
+      return miniSearch.search(searchText.toLowerCase());
+    });
+  }, [filterByBody, filterByTitle, filterByUserId]);
   const drawer = useRef(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  // useComponentDataSend("drawer", { drawer, isDrawerOpen, setIsDrawerOpen });
   React.useEffect(() => {
-    props.navigation.setParams({ drawer, isDrawerOpen, setIsDrawerOpen });
+    props.navigation.setParams({
+      drawer,
+      isDrawerOpen,
+      setIsDrawerOpen,
+      theme,
+    });
   }, [isDrawerOpen, setIsDrawerOpen]);
+  const { theme, setTheme } = useContext(ThemeContext);
 
   return (
     <Redirector>
@@ -140,18 +155,27 @@ export default function Home(props) {
             filterByTitle={filterByTitle}
             setFilterByTitle={setFilterByTitle}
             filterByBody={filterByBody}
+            setParams={props.navigation.setParams}
             setFilterByBody={setFilterByBody}
-            setSearchOptions={setSearchOptions}
           />
         )}
       >
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#000101" />
+          <View style={styles(theme).loadingContainer}>
+            <ActivityIndicator
+              size="large"
+              color={colorTheme[theme].secondary}
+            />
           </View>
         ) : (
           <>
-            <Search searchText={searchText} setSearchText={setSearchText} />
+            <Search
+              drawer={drawer}
+              searchText={searchText}
+              setSearchText={setSearchText}
+              isDrawerOpen={isDrawerOpen}
+              setIsDrawerOpen={setIsDrawerOpen}
+            />
 
             <Posts
               posts={filteredPosts}
@@ -166,10 +190,11 @@ export default function Home(props) {
   );
 }
 
-const styles = StyleSheet.create({
-  loadingContainer: {
-    backgroundColor: "#fff",
-    flex: 1,
-    justifyContent: "center",
-  },
-});
+const styles = (theme) =>
+  StyleSheet.create({
+    loadingContainer: {
+      backgroundColor: colorTheme[theme].primary,
+      flex: 1,
+      justifyContent: "center",
+    },
+  });
