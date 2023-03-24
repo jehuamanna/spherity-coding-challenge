@@ -1,0 +1,1 @@
+# spherity-coding-challenge
